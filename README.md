@@ -20,7 +20,7 @@ This repo is the RPi code for Ben Dechrai's talk, "Opening Doors with JSON Web T
 
 ### Reading JWTs from a serial stream
 
-I used a PN532 NFC reader connected to an Arduino Uno R3 compatible board, which returns meta data about the NFC cards over serial. You can (see the code for the Arduino board here)[https://github.com/bendechrai/opening-doors-arduino].
+I used a PN532 NFC reader connected to an Arduino Uno R3 compatible board, which returns meta data about the NFC cards over serial. You can [see the code for the Arduino board here](https://github.com/bendechrai/opening-doors-arduino).
 
 The RPi needs to be running `poll-usb.py`, which will read the data frmo the Arduino, and process JWTs received that way instead. I believe all modules used in this script are already available in a base Raspian install, but I've not tested this assumption.
 
