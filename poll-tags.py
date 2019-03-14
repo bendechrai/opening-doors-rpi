@@ -7,20 +7,26 @@ import jwt
 import RPi.GPIO as GPIO
 
 ServoPin = 32
-ServoUnlockPosition = 10
-ServoLockPosition = 5
+ServoUnlockPosition = 5
+ServoLockPosition = 10
 
 mifare = nxppy.Mifare()
 debug = False
 
+# key=b'''-----BEGIN PUBLIC KEY-----
+# MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuVyX3zIoJ1/5L0zx7rRZ
+# 45EAXUViadzFyUO3Evy80164QQGyDqnkSHdZLXGtSimh4BExLoWs9GZemcFfhAmp
+# ER1C2kJ/ZevNBmW3sYxsNmDd6a/ehDieN+0pap+4qS6S80oW/yH5lyrPLD1v4+G2
+# 1gQoAO7XCe9h2rswj1423ZQCgBac4MyjOKroVfjGWzPQYKkFw8MDmPV4RWuOFDoW
+# rR5nhdKd0CnJOLoq04JvSnr3uoDWjhZZHXpI/vLasVSmE2WEK86k3iclDpe5VdjU
+# d2zSczJfTWNwplMEENe7DD1Ri9CtG2+V0FNQ0W0YK/o4UxLW1Yg5jz13ISuigwVI
+# kQIDAQAB
+# -----END PUBLIC KEY-----'''
 key=b'''-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuVyX3zIoJ1/5L0zx7rRZ
-45EAXUViadzFyUO3Evy80164QQGyDqnkSHdZLXGtSimh4BExLoWs9GZemcFfhAmp
-ER1C2kJ/ZevNBmW3sYxsNmDd6a/ehDieN+0pap+4qS6S80oW/yH5lyrPLD1v4+G2
-1gQoAO7XCe9h2rswj1423ZQCgBac4MyjOKroVfjGWzPQYKkFw8MDmPV4RWuOFDoW
-rR5nhdKd0CnJOLoq04JvSnr3uoDWjhZZHXpI/vLasVSmE2WEK86k3iclDpe5VdjU
-d2zSczJfTWNwplMEENe7DD1Ri9CtG2+V0FNQ0W0YK/o4UxLW1Yg5jz13ISuigwVI
-kQIDAQAB
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDPBrl5ukoX48PHQqKVMbJEqPzF
+7TwUv057U6GXrXX0leak5N+QuieFmBiXYmOYd2RX3EvIfCHqw9WmhccIEfGvXejC
+WGnASqeJ6NH1KSTFwuiiAPIDzvipkWboIK4grir7H7sc/amGNiBsGrb0kJM/Urmx
+EXArjIISZLUcp1QSFQIDAQAB
 -----END PUBLIC KEY-----'''
 aud='opensesame://door1/'
 
@@ -47,9 +53,8 @@ def loop():
                 DoorLocked = False
                 print("Unlock Door")
                 ServoPosition.ChangeDutyCycle(ServoUnlockPosition)
-                #for position in range(ServoLockPosition, ServoUnlockPosition):
-                #    ServoPosition.ChangeDutyCycle(position)
-                #    time.sleep(0.2)
+                print("Wait 5 seconds (let someone open the door)")
+                time.sleep(5)
 
         except jwt.exceptions.ExpiredSignatureError:
             print('Access denied')
@@ -66,9 +71,14 @@ def loop():
                 ServoPosition.ChangeDutyCycle(ServoLockPosition)
             pass
 
+        except jwt.exceptions.DecodeError:
+            print('Card content did not look like a JWT')
+            pass
+
         except MemoryError:
             pass
 
+        print('Waiting')
         time.sleep(0.5)
 
 
