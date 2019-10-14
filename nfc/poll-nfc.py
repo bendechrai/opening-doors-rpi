@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: <encoding unicode > -*-
 
+import string
 import nxppy
 import json
 import time
@@ -10,8 +11,8 @@ import RPi.GPIO as GPIO
 import emoji
 
 ServoPin = 32
-ServoUnlockPosition = 5
-ServoLockPosition = 10
+ServoLockPosition = 5
+ServoUnlockPosition = 10.5
 
 mifare = nxppy.Mifare()
 debug = False
@@ -31,9 +32,10 @@ GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by p
 GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
 ServoPosition = GPIO.PWM(ServoPin, 50) # Set PWM to 50Hz
 ServoPosition.start(ServoLockPosition) # Default servo to locked position
+GPIO.cleanup()
+DoorLocked = True
 
 def loop():
-    DoorLocked = True
     while True:
         try:
 
@@ -45,6 +47,8 @@ def loop():
             token = getNFCPayload(data)
             token_payload = jwt.decode(token, key, audience=aud)
 
+            printTokenPayload(token_payload)
+
             # CALC SECONDS TO TOKEN EXPIRY
             timeNow=datetime.datetime.now().replace(microsecond=0)
             timeExp=datetime.datetime.fromtimestamp(token_payload['exp'])
@@ -54,16 +58,15 @@ def loop():
             print('Door 1 can be unlocked until ' + timeExp.strftime('%a %d %B at %H:%M:%S') + ' (' + str(timeRemaining.total_seconds()) + ' seconds remaining)')
 
             # UNLOCK THE DOOR
-            if(DoorLocked):
-                DoorLocked = False
-                print(emoji.emojize(":unlock: :unlock: :unlock: UNLOCK DOOR :unlock: :unlock: :unlock:", use_aliases=True))
-                ServoPosition.ChangeDutyCycle(ServoUnlockPosition)
+            unlockDoor()
 
         # IF TOKEN EXPIRED
         except jwt.exceptions.ExpiredSignatureError:
 
             # DECODE TOKEN WITHOUT VERIFICATION
             token_payload = jwt.decode(token, verify=False)
+
+            printTokenPayload(token_payload)
 
             # HOW LONG AGO DID IT EXPIRE?
             timeNow=datetime.datetime.now().replace(microsecond=0)
@@ -74,19 +77,13 @@ def loop():
             print('Access denied - token expired at ' + timeExp.strftime('%a %d %B at %H:%M:%S') + ' (' + str(timeAgo.total_seconds()) + ' seconds ago)')
 
             # MAKE SURE DOOR IS LOCKED
-            if(not DoorLocked):
-                DoorLocked = True
-                print(emoji.emojize(":lock: :lock: :lock: LOCK DOOR :lock: :lock: :lock:", use_aliases=True))
-                ServoPosition.ChangeDutyCycle(ServoLockPosition)
+            lockDoor()
             pass
 
         # SOME UNKNOWN ERRO
         except nxppy.SelectError:
             # MAKE SURE DOOR IS LOCKED
-            if(not DoorLocked):
-                DoorLocked = True
-                print(emoji.emojize(":lock: :lock: :lock: LOCK DOOR :lock: :lock: :lock:", use_aliases=True))
-                ServoPosition.ChangeDutyCycle(ServoLockPosition)
+            lockDoor()
             pass
 
         # NFC VALUE NOT A JWT?
@@ -97,9 +94,45 @@ def loop():
         except MemoryError:
             pass
 
-        print('...')
+        print(emoji.emojize('\n:eyes:'))
         time.sleep(0.5)
 
+def printTokenPayload(token_payload):
+        # SHOW TOKEN PAYLOAD
+        timeIat=datetime.datetime.fromtimestamp(token_payload['iat'])
+        timeExp=datetime.datetime.fromtimestamp(token_payload['exp'])
+        print('+---------------------------------------------------------------------------------------------------+')
+        print('| TOKEN:                                                                                            |')
+        print(string.ljust('|      SUB: ' + token_payload['sub'],                     100, ' ') +                 '|')
+        print(string.ljust('|      IAT: ' + timeIat.strftime('%a %d %B at %H:%M:%S'), 100, ' ') +                 '|')
+        print(string.ljust('|      EXP: ' + timeExp.strftime('%a %d %B at %H:%M:%S'), 100, ' ') +                 '|')
+        print(string.ljust('|      AUD: ' + str(token_payload['aud']),                100, ' ') +                 '|')
+        print(string.ljust('|      ISS: ' + token_payload['iss'],                     100, ' ') +                 '|')
+        print(string.ljust('|      AZP: ' + token_payload['azp'],                     100, ' ') +                 '|')
+        print(string.ljust('|    SCOPE: ' + token_payload['scope'],                   100, ' ') +                 '|')
+        print('+---------------------------------------------------------------------------------------------------+')
+
+def lockDoor():
+    global DoorLocked
+    if(not DoorLocked):
+        DoorLocked = True
+        print(emoji.emojize(":lock: :lock: :lock:  LOCK DOOR  :lock: :lock: :lock:", use_aliases=True))
+        GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
+        GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
+        ServoPosition.start(ServoLockPosition)
+        time.sleep(0.1)
+        GPIO.cleanup()
+
+def unlockDoor():
+    global DoorLocked
+    if(DoorLocked):
+        DoorLocked = False
+        print(emoji.emojize(":unlock: :unlock: :unlock: UNLOCK DOOR :unlock: :unlock: :unlock:", use_aliases=True))
+        GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
+        GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
+        ServoPosition.start(ServoUnlockPosition)
+        time.sleep(0.1)
+        GPIO.cleanup()
 
 def destroy():
     GPIO.cleanup()
