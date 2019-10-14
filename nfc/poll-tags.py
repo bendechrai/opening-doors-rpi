@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 
 ServoPin = 32
 ServoUnlockPosition = 5
-ServoLockPosition = 10
+ServoLockPosition = 10.5
 
 mifare = nxppy.Mifare()
 debug = False
