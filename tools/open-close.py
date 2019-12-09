@@ -5,12 +5,10 @@ import time
 import RPi.GPIO as GPIO
 
 ServoPin = 32
-ServoUnlockPosition = 0
-ServoLockPosition = 100
 
-GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
-GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
-Servo = GPIO.PWM(ServoPin, 50) # Set PWM to 50Hz
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(ServoPin, GPIO.OUT)
+Servo = GPIO.PWM(ServoPin, 50)
 Servo.start(0)
 
 def loop():
