@@ -5,7 +5,6 @@ import time
 import RPi.GPIO as GPIO
 
 ServoPin = 32
-
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(ServoPin, GPIO.OUT)
 Servo = GPIO.PWM(ServoPin, 50)

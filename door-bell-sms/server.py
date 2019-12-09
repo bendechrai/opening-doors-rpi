@@ -11,10 +11,6 @@ import RPi.GPIO as GPIO
 import emoji
 from twilio.rest import Client
 
-ServoPin = 32
-ServoLockPosition = 5
-ServoUnlockPosition = 10.5
-
 auth_client_id = "vJF3okNM6n1ryyRU7jH4uomKCH4fMw04"
 auth_domain='opening-doors.auth0.com'
 auth_audience='opensesame://door1/'
@@ -33,11 +29,11 @@ twilio_token='5c190d53523ed37117b67f119dda8145'
 twilio_config_domain='jsonbox.io'
 twilio_config='https://jsonbox.io/box_a4a70d5f6a6c7c395d3e/door'
 
-GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
-GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
-ServoPosition = GPIO.PWM(ServoPin, 50) # Set PWM to 50Hz
-ServoPosition.start(ServoLockPosition) # Default servo to locked position
-GPIO.cleanup()
+ServoPin = 32
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(ServoPin, GPIO.OUT)
+Servo = GPIO.PWM(ServoPin, 50)
+Servo.start(0)
 DoorLocked = True
 
 def waitForDoorBell():
@@ -125,8 +121,6 @@ def handleDoorBell():
         pass
 
 
-
-
 def getToken(deviceConfig):
     time.sleep(deviceConfig["interval"])
 
@@ -153,11 +147,6 @@ def getToken(deviceConfig):
         # Return tokens
         print(emoji.emojize(':thumbs_up:'))
         return tokens
-
-
-
-
-
 
 def printDeviceConfig(deviceConfig):
         print('+-----------------------------------------------------------------------------------------------------+')
@@ -201,22 +190,14 @@ def lockDoor():
     if(not DoorLocked):
         DoorLocked = True
         print(emoji.emojize(":lock: :lock: :lock:  LOCK DOOR  :lock: :lock: :lock:", use_aliases=True))
-        GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
-        GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
-        ServoPosition.start(ServoLockPosition)
-        time.sleep(0.1)
-        GPIO.cleanup()
+        SetAngle(90)
 
 def unlockDoor():
     global DoorLocked
     if(DoorLocked):
         DoorLocked = False
         print(emoji.emojize(":unlock: :unlock: :unlock: UNLOCK DOOR :unlock: :unlock: :unlock:", use_aliases=True))
-        GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
-        GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
-        ServoPosition.start(ServoUnlockPosition)
-        time.sleep(0.1)
-        GPIO.cleanup()
+        SetAngle(0)
 
         # LOCK DOOR AFTER 5 SECONDS
         time.sleep(1)
@@ -231,7 +212,13 @@ def unlockDoor():
         lockDoor()
         time.sleep(1)
 
-
+def SetAngle(angle):
+    duty = angle / 18 + 2
+    GPIO.output(ServoPin, True)
+    Servo.ChangeDutyCycle(duty)
+    time.sleep(1)
+    GPIO.output(ServoPin, False)
+    Servo.ChangeDutyCycle(0)
 
 if __name__ == '__main__':     # Program start from here
     try:
