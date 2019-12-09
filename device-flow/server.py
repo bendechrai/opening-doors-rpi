@@ -13,19 +13,18 @@ ServoPin = 32
 ServoLockPosition = 5
 ServoUnlockPosition = 10.5
 
-auth_client_id = "ZLN1lbika9cy8BnAyJSmE354yPGZpkK8"
+auth_client_id = "vJF3okNM6n1ryyRU7jH4uomKCH4fMw04"
+auth_domain='opening-doors.auth0.com'
 auth_audience='opensesame://door1/'
-auth_pubkey='''
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuVyX3zIoJ1/5L0zx7rRZ
-45EAXUViadzFyUO3Evy80164QQGyDqnkSHdZLXGtSimh4BExLoWs9GZemcFfhAmp
-ER1C2kJ/ZevNBmW3sYxsNmDd6a/ehDieN+0pap+4qS6S80oW/yH5lyrPLD1v4+G2
-1gQoAO7XCe9h2rswj1423ZQCgBac4MyjOKroVfjGWzPQYKkFw8MDmPV4RWuOFDoW
-rR5nhdKd0CnJOLoq04JvSnr3uoDWjhZZHXpI/vLasVSmE2WEK86k3iclDpe5VdjU
-d2zSczJfTWNwplMEENe7DD1Ri9CtG2+V0FNQ0W0YK/o4UxLW1Yg5jz13ISuigwVI
-kQIDAQAB
------END PUBLIC KEY-----
-'''
+auth_pubkey='''-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvupG3F3hKRzg8cxvF9Nr
+QwPyCaJ0Vzi+jj/c3F3hCdhMEjZ8hFFq3VOK4R47B97bi9cft5J9gqVZ5QYjppMq
+idWn10HvIvxSfXvaGdMCrAyhJaCSYOVFk2g7ZrxEwl1pv4l8rrTqs1cwWo+6m1kK
+mxs8tF7PvyECVWx0jUoJOskDj/2LK2x4KfZdJztlvtB8J8yd8L/Pa/HQNSlIyB2i
+7njosJxiW5cIMaB4GUIORmX4apnThuMH0jtSwBJyo/CNUGcGyEhAQww/uwBnFhtV
+pPpKN1cyF/4iKV+zhDmnKkyHASoqzN+2uOFoDpL9CoxC8mbslWy/85zEQSR5Nqlb
+5QIDAQAB
+-----END PUBLIC KEY-----'''
 
 GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
 GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
@@ -36,12 +35,14 @@ DoorLocked = True
 
 def loop():
 
-    conn = httplib.HTTPSConnection('bendechrai.auth0.com');
+    conn = httplib.HTTPSConnection(auth_domain);
     conn.request('POST', '/oauth/device/code', json.dumps({'client_id': auth_client_id, 'scope': 'openid profile', 'audience': auth_audience}), {"content-type": "application/json"})
     code_request = conn.getresponse()
     deviceConfig = json.loads(code_request.read())
 
     printDeviceConfig(deviceConfig)
+
+    print('https://barcode.tec-it.com/en/QRCode?data=' + deviceConfig['verification_uri_complete'])
 
     try:
         tokens = getToken(deviceConfig);
@@ -87,12 +88,15 @@ def loop():
     except MemoryError:
         pass
 
+
+
+
 def getToken(deviceConfig):
     time.sleep(deviceConfig["interval"])
 
     print(emoji.emojize('\n:eyes:'))
 
-    conn = httplib.HTTPSConnection('bendechrai.auth0.com');
+    conn = httplib.HTTPSConnection(auth_domain);
     conn.request('POST', '/oauth/token', json.dumps({'grant_type': 'urn:ietf:params:oauth:grant-type:device_code', 'device_code': deviceConfig["device_code"], 'client_id': auth_client_id}), {"content-type": "application/json"})
     token_request = conn.getresponse()
     tokens = json.loads(token_request.read())
@@ -113,6 +117,11 @@ def getToken(deviceConfig):
         # Return tokens
         print(emoji.emojize(':thumbs_up:'))
         return tokens
+
+
+
+
+
 
 def printDeviceConfig(deviceConfig):
         print('+-----------------------------------------------------------------------------------------------------+')
