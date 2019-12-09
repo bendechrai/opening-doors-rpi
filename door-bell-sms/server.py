@@ -32,7 +32,7 @@ twilio_config='https://jsonbox.io/box_a4a70d5f6a6c7c395d3e/door'
 ServoPin = 32
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(ServoPin, GPIO.OUT)
-Servo = GPIO.PWM(ServoPin, 50)
+Servo = GPIO.PWM(ServoPin, 25)
 Servo.start(0)
 DoorLocked = True
 
@@ -216,7 +216,7 @@ def SetAngle(angle):
     duty = angle / 23 + 2
     GPIO.output(ServoPin, True)
     Servo.ChangeDutyCycle(duty)
-    time.sleep(1)
+    time.sleep(0.2)
     GPIO.output(ServoPin, False)
     Servo.ChangeDutyCycle(0)
 
