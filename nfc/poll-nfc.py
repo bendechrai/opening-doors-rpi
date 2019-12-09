@@ -17,14 +17,15 @@ ServoUnlockPosition = 10.5
 mifare = nxppy.Mifare()
 debug = False
 
+# Get the PEM file from Auth0, and run `openssl x509 -pubkey -noout -in cert.pem  > pubkey.pem`
 key=b'''-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuVyX3zIoJ1/5L0zx7rRZ
-45EAXUViadzFyUO3Evy80164QQGyDqnkSHdZLXGtSimh4BExLoWs9GZemcFfhAmp
-ER1C2kJ/ZevNBmW3sYxsNmDd6a/ehDieN+0pap+4qS6S80oW/yH5lyrPLD1v4+G2
-1gQoAO7XCe9h2rswj1423ZQCgBac4MyjOKroVfjGWzPQYKkFw8MDmPV4RWuOFDoW
-rR5nhdKd0CnJOLoq04JvSnr3uoDWjhZZHXpI/vLasVSmE2WEK86k3iclDpe5VdjU
-d2zSczJfTWNwplMEENe7DD1Ri9CtG2+V0FNQ0W0YK/o4UxLW1Yg5jz13ISuigwVI
-kQIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvupG3F3hKRzg8cxvF9Nr
+QwPyCaJ0Vzi+jj/c3F3hCdhMEjZ8hFFq3VOK4R47B97bi9cft5J9gqVZ5QYjppMq
+idWn10HvIvxSfXvaGdMCrAyhJaCSYOVFk2g7ZrxEwl1pv4l8rrTqs1cwWo+6m1kK
+mxs8tF7PvyECVWx0jUoJOskDj/2LK2x4KfZdJztlvtB8J8yd8L/Pa/HQNSlIyB2i
+7njosJxiW5cIMaB4GUIORmX4apnThuMH0jtSwBJyo/CNUGcGyEhAQww/uwBnFhtV
+pPpKN1cyF/4iKV+zhDmnKkyHASoqzN+2uOFoDpL9CoxC8mbslWy/85zEQSR5Nqlb
+5QIDAQAB
 -----END PUBLIC KEY-----'''
 aud='opensesame://door1/'
 
@@ -80,7 +81,7 @@ def loop():
             lockDoor()
             pass
 
-        # SOME UNKNOWN ERRO
+        # SOME UNKNOWN ERROR
         except nxppy.SelectError:
             # MAKE SURE DOOR IS LOCKED
             lockDoor()
@@ -136,6 +137,39 @@ def unlockDoor():
 
 def destroy():
     GPIO.cleanup()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
