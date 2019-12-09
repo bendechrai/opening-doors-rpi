@@ -6,10 +6,6 @@ import datetime
 import jwt
 import RPi.GPIO as GPIO
 
-ServoPin = 32
-ServoUnlockPosition = 5
-ServoLockPosition = 10.5
-
 mifare = nxppy.Mifare()
 debug = False
 
@@ -30,10 +26,11 @@ EXArjIISZLUcp1QSFQIDAQAB
 -----END PUBLIC KEY-----'''
 aud='opensesame://door1/'
 
-GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
-GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
-ServoPosition = GPIO.PWM(ServoPin, 50) # Set PWM to 50Hz
-ServoPosition.start(ServoLockPosition) # Default servo to locked position
+ServoPin = 32
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(ServoPin, GPIO.OUT)
+Servo = GPIO.PWM(ServoPin, 50)
+Servo.start(0)
 
 def loop():
     DoorLocked = True
@@ -52,7 +49,7 @@ def loop():
             if(DoorLocked):
                 DoorLocked = False
                 print("Unlock Door")
-                ServoPosition.ChangeDutyCycle(ServoUnlockPosition)
+                SetAngle(0)
                 print("Wait 5 seconds (let someone open the door)")
                 time.sleep(5)
 
@@ -61,14 +58,14 @@ def loop():
             if(not DoorLocked):
                 DoorLocked = True
                 print("Lock Door")
-                ServoPosition.ChangeDutyCycle(ServoLockPosition)
+                SetAngle(90)
             pass
 
         except nxppy.SelectError:
             if(not DoorLocked):
                 DoorLocked = True
                 print("Lock Door")
-                ServoPosition.ChangeDutyCycle(ServoLockPosition)
+                SetAngle(90)
             pass
 
         except jwt.exceptions.DecodeError:
@@ -85,6 +82,14 @@ def loop():
 def destroy():
     GPIO.cleanup()
 
+
+def SetAngle(angle):
+    duty = angle / 18 + 2
+    GPIO.output(ServoPin, True)
+    Servo.ChangeDutyCycle(duty)
+    time.sleep(1)
+    GPIO.output(ServoPin, False)
+    Servo.ChangeDutyCycle(0)
 
 
 def getNFCPayload(data):

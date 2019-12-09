@@ -10,10 +10,6 @@ import jwt
 import RPi.GPIO as GPIO
 import emoji
 
-ServoPin = 32
-ServoLockPosition = 5
-ServoUnlockPosition = 10.5
-
 mifare = nxppy.Mifare()
 debug = False
 
@@ -29,11 +25,11 @@ pPpKN1cyF/4iKV+zhDmnKkyHASoqzN+2uOFoDpL9CoxC8mbslWy/85zEQSR5Nqlb
 -----END PUBLIC KEY-----'''
 aud='opensesame://door1/'
 
-GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
-GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
-ServoPosition = GPIO.PWM(ServoPin, 50) # Set PWM to 50Hz
-ServoPosition.start(ServoLockPosition) # Default servo to locked position
-GPIO.cleanup()
+ServoPin = 32
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(ServoPin, GPIO.OUT)
+Servo = GPIO.PWM(ServoPin, 50)
+Servo.start(0)
 DoorLocked = True
 
 def loop():
@@ -118,22 +114,22 @@ def lockDoor():
     if(not DoorLocked):
         DoorLocked = True
         print(emoji.emojize(":lock: :lock: :lock:  LOCK DOOR  :lock: :lock: :lock:", use_aliases=True))
-        GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
-        GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
-        ServoPosition.start(ServoLockPosition)
-        time.sleep(0.1)
-        GPIO.cleanup()
+        SetAngle(90)
 
 def unlockDoor():
     global DoorLocked
     if(DoorLocked):
         DoorLocked = False
         print(emoji.emojize(":unlock: :unlock: :unlock: UNLOCK DOOR :unlock: :unlock: :unlock:", use_aliases=True))
-        GPIO.setmode(GPIO.BOARD)               # Set the board mode to numbers pins by physical location
-        GPIO.setup(ServoPin, GPIO.OUT)         # Set Servo Pin mode as output
-        ServoPosition.start(ServoUnlockPosition)
-        time.sleep(0.1)
-        GPIO.cleanup()
+        SetAngle(0)
+
+def SetAngle(angle):
+    duty = angle / 18 + 2
+    GPIO.output(ServoPin, True)
+    Servo.ChangeDutyCycle(duty)
+    time.sleep(1)
+    GPIO.output(ServoPin, False)
+    Servo.ChangeDutyCycle(0)
 
 def destroy():
     GPIO.cleanup()
