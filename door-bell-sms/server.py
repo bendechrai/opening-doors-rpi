@@ -25,9 +25,10 @@ pPpKN1cyF/4iKV+zhDmnKkyHASoqzN+2uOFoDpL9CoxC8mbslWy/85zEQSR5Nqlb
 -----END PUBLIC KEY-----'''
 
 twilio_sid='ACc3e25e6d1a9a5b1303e2d7d00a28533f'
-twilio_token='5c190d53523ed37117b67f119dda8145'
-twilio_config_domain='jsonbox.io'
-twilio_config='https://jsonbox.io/box_a4a70d5f6a6c7c395d3e/door'
+twilio_token='315f882052f0d967ecb1bf389f820e0d'
+jsonbin_domain='api.jsonbin.io'
+jsonbin_request='https://api.jsonbin.io/v3/b/608f8f7ad64cd16802a79ff7/latest'
+jsonbin_master_key="$2b$10$010U3SzJzSr9TtkP3YCl/Okk4CQJ/vsOzIxV0hpVJp0eCUwtlPT7m"
 
 ServoPin = 32
 GPIO.setmode(GPIO.BOARD)
@@ -36,11 +37,12 @@ Servo = GPIO.PWM(ServoPin, 25)
 Servo.start(0)
 DoorLocked = True
 
+server_socket = socket.socket()
+
 def waitForDoorBell():
 
-    host = '192.168.43.11'
+    host = '192.168.2.10'
     port = 5000  # initiate port no above 1024
-    server_socket = socket.socket()  # get instance
     server_socket.bind((host, port))  # bind host address and port together
     server_socket.listen(1)
 
@@ -48,8 +50,17 @@ def waitForDoorBell():
         print("Waiting for door bell")
         conn, address = server_socket.accept()  # accept new connection
 
-        print("Ding dong!")
-        handleDoorBell()
+        with conn:
+            data = conn.recv(1024).split()
+            if data[1] == b'/doorbell':
+                print("Ding dong!")
+                handleDoorBell()
+            if data[1] == b'/lock':
+                print("Lock!")
+                lockDoor()
+            if data[1] == b'/unlock':
+                print("Unlock!")
+                unlockDoor()
 
         conn.close()  # close the connection
 
@@ -63,18 +74,30 @@ def handleDoorBell():
 
     printDeviceConfig(deviceConfig)
 
-    twilio_config_conn = http.client.HTTPSConnection(twilio_config_domain)
-    twilio_config_conn.request('GET', twilio_config)
-    twilio_config_request = twilio_config_conn.getresponse()
-    twilio_config_data = json.loads(twilio_config_request.read())
+    jsonbin_conn = http.client.HTTPSConnection(jsonbin_domain)
+    jsonbin_conn.request('GET', jsonbin_request, '', { "X-Master-key": jsonbin_master_key })
+    jsonbin_response = jsonbin_conn.getresponse()
+    jsonbin_data = json.loads(jsonbin_response.read())
+    # {'record': {'number': '+61415127120', 'name': 'joh'}, 'metadata': {'id': '608f8f7ad64cd16802a79ff7', 'private': True, 'createdAt': '2021-05-03T06:14:16.956Z'}}
+
+    print(jsonbin_data)
+
     twilio_client = Client(twilio_sid, twilio_token)
 
+    # SEND MESSAGE TO LAST PERSON ON LIST
     message = twilio_client.messages.create(
-        body="Hi " + twilio_config_data[0]['name'] + ". Unlock your door with this URL: " + deviceConfig['verification_uri_complete'],
+        body="Hi " + jsonbin_data['record']['name'] + ". Unlock your door with this URL: " + deviceConfig['verification_uri_complete'],
         from_='DOOR',
-        to=twilio_config_data[0]['number']
+        to=jsonbin_data['record']['number']
     )
-    print('SMS sent to ' + twilio_config_data[0]['name'])
+    print('Unlock URL sent to the last person to SMS us!')
+
+    # SEND MESSAGE TO BEN TOO, JUST IN CASE
+    message = twilio_client.messages.create(
+        body="As a backup, here's the unlock URL: " + deviceConfig['verification_uri_complete'],
+        from_='DOOR',
+        to='+61415127120'
+    )
 
     try:
         tokens = getToken(deviceConfig);
@@ -199,21 +222,8 @@ def unlockDoor():
         print(emoji.emojize(":unlock: :unlock: :unlock: UNLOCK DOOR :unlock: :unlock: :unlock:", use_aliases=True))
         SetAngle(0)
 
-        # LOCK DOOR AFTER 5 SECONDS
-        time.sleep(1)
-        print('Door 1 locking in 4 seconds')
-        time.sleep(1)
-        print('Door 1 locking in 3 seconds')
-        time.sleep(1)
-        print('Door 1 locking in 2 seconds')
-        time.sleep(1)
-        print('Door 1 locking in 1 seconds')
-        time.sleep(1)
-        lockDoor()
-        time.sleep(1)
-
 def SetAngle(angle):
-    duty = angle / 23 + 2
+    duty = angle / 34 + 3
     GPIO.output(ServoPin, True)
     Servo.ChangeDutyCycle(duty)
     time.sleep(0.2)
@@ -226,3 +236,6 @@ if __name__ == '__main__':     # Program start from here
 
     except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the destroy() will be  executed.
         GPIO.cleanup()
+        if server_socket:
+            server_socket.close()
+
