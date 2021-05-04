@@ -32,7 +32,7 @@ DoorLocked = True
 
 def waitForDoorBell():
 
-    host = '192.168.43.11'
+    host = '192.168.2.10'
     port = 5000  # initiate port no above 1024
     server_socket = socket.socket()  # get instance
     server_socket.bind((host, port))  # bind host address and port together
@@ -203,7 +203,7 @@ def unlockDoor():
         time.sleep(1)
 
 def SetAngle(angle):
-    duty = angle / 23 + 2
+    duty = angle / 34 + 3
     GPIO.output(ServoPin, True)
     Servo.ChangeDutyCycle(duty)
     time.sleep(0.2)

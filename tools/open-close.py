@@ -8,17 +8,19 @@ ServoPin = 32
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(ServoPin, GPIO.OUT)
 Servo = GPIO.PWM(ServoPin, 25)
-Servo.start(2)
+Servo.start(0)
 
 def loop():
     while True:
-        SetAngle(90)
-        time.sleep(1)
+        print('Open')
         SetAngle(0)
+        time.sleep(1)
+        print('Close')
+        SetAngle(90)
         time.sleep(1)
 
 def SetAngle(angle):
-    duty = angle / 23 + 2
+    duty = angle / 34 + 3
     GPIO.output(ServoPin, True)
     Servo.ChangeDutyCycle(duty)
     time.sleep(0.2)

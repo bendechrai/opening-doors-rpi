@@ -184,7 +184,7 @@ def unlockDoor():
         time.sleep(1)
 
 def SetAngle(angle):
-    duty = angle / 23 + 2
+    duty = angle / 34 + 3
     GPIO.output(ServoPin, True)
     Servo.ChangeDutyCycle(duty)
     time.sleep(0.2)
